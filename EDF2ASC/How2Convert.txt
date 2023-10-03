@@ -1,0 +1,3 @@
+1. paste edf files here
+2. Open PowerShell 
+3. call"edf2asc *.edf" to convert all files or "edf2asc <filename>" to convert a specific file
