@@ -1,5 +1,5 @@
 import { log, warn, error, success, logNewline } from './log.js';
-import { getSubjectsEyelink, getSubjectsLabchart } from './getSubjects.js';
+import { getSubjectsEyelink, getSubjectsLabchart, getSubjectsMatlab, unifySubjectLists } from './getSubjects.js';
 import { parseXLS } from './parseXLS.js';
 
 
@@ -12,13 +12,9 @@ const inputDirs = {
 };
 const outputDir = null;
 
-// read eyelink dir
+// get subject list: each subject must have a fixation and saccade report, a labchart ecg file and a matlab data dir
 const eyelinkSubjects = getSubjectsEyelink({ eyelinkDir: inputDirs.eyelink });
-
-// read labchart dir
 const labchartSubjects = getSubjectsLabchart({ labchartDir: inputDirs.labchart });
-console.log(labchartSubjects)
-
-// // test reading xls
-// const xlsData = parseXLS({ path: eyelinkSubjects[0].fixPath });
-// console.log(xlsData[0]);
+const matlabSubjects = getSubjectsMatlab({ matlabDir: inputDirs.matlab });  // todo: test matlab dir content
+const subjects = unifySubjectLists({ eyelinkSubjects, labchartSubjects, matlabSubjects });
+console.log(subjects)

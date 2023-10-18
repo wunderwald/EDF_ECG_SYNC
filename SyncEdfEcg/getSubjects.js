@@ -6,6 +6,10 @@ const getDirList = ({ dir, fileExtension }) => fs.readdirSync(dir)
     .filter(file => file.endsWith(fileExtension))
     .map(file => ({ file, path: `${dir}/${file}` }));
 
+const getDirListSubdirs = ({ dir }) => fs.readdirSync(dir)
+    .filter(subdir => fs.lstatSync(`${dir}/${subdir}`).isDirectory())
+    .map(subdir => ({ subdir, path: `${dir}/${subdir}` }));
+
 const fixSubjectId = ({ subjectID }) => {
     if (subjectID.length === 3) return subjectID;
     if (subjectID.length === 2) return `0${subjectID}`;
@@ -22,6 +26,15 @@ const analyzeLabchartFiles = ({ fileList }) => fileList.map(({ file, path }) => 
     const [subjectID, experimentID] = file.replace('.txt', '').split('_');
     return { subjectID, path, file };
 });
+
+const analyzeMatlabDirs = ({ subdirList }) => subdirList.map(({ subdir, path }) => {
+    if(subdir.split('_').length !== 2){
+        warn(`invalid format of matlab subdir: ${subdir}`);
+        return null;
+    }
+    const [subjectID, experimentID] = subdir.split('_');
+    return { subjectID, path, subdir };
+}).filter(o => o);
 
 export const getSubjectsEyelink = ({ eyelinkDir }) => {
     logNewline();
@@ -70,3 +83,45 @@ export const getSubjectsLabchart = ({ labchartDir }) => {
         };
     });
 };
+
+export const getSubjectsMatlab = ({ matlabDir }) => {
+    logNewline();
+    log('reading matlab files (trial and frame data)');
+    // make objects { subjectID, path, subdir } for each subdir in the input dir
+    const subdirs = analyzeMatlabDirs({ subdirList: getDirListSubdirs({ dir: matlabDir }) });
+    if (subdirs.length === 0) error(`no valid subdirs found in matlab dir [${matlabDir}]`);
+    return subdirs.map(({ subjectID, path }) => {
+        const fixedSubjectId = fixSubjectId({ subjectID });
+        success(`matlab subdir found for subject ${fixedSubjectId}.`);
+        return {
+            subjectID: fixedSubjectId,
+            path: path,
+        };
+    });
+};
+
+export const unifySubjectLists = ({ eyelinkSubjects, labchartSubjects, matlabSubjects }) => {
+    logNewline();
+    log('combining eyelink, labchart and matlab subject lists');
+    const subjectIDs = [...(new Set([
+        ...eyelinkSubjects.map(o => o.subjectID),
+        ...labchartSubjects.map(o => o.subjectID),
+        ...matlabSubjects.map(o => o.subjectID),
+    ]))];
+    return subjectIDs.map(subjectID => {
+        const eyelinkFiles = eyelinkSubjects.find(o => o.subjectID === subjectID);
+        const labchartFile = labchartSubjects.find(o => o.subjectID === subjectID);
+        const matlabSubdir = matlabSubjects.find(o => o.subjectID === subjectID);
+        if(!(eyelinkFiles && labchartFile && matlabSubdir)){
+            warn(`subject ${subjectID} misses ${eyelinkFiles ? '' : 'eyelink files, '}${labchartFile ? '' : 'labchart file, '}${matlabSubdir ? '' : 'matlab subdir'}`);
+            return null;
+        }
+        return {
+            subjectID,
+            fixationReportPath: eyelinkFiles.fixPath,
+            saccadeReportPath: eyelinkFiles.saccPath,
+            labchartPath: labchartFile.path,
+            matlabSubdir: matlabSubdir.path
+        };
+    }).filter(o => o);
+}
