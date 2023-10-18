@@ -1,4 +1,4 @@
-import { log, warn, error, success, logNewline } from  './log.js';
+import { log, warn, error, success, logNewline } from './log.js';
 import { parseXLS } from './parseXLS.js';
 import { getSubjectsEyelink } from './getSubjects.js';
 
@@ -15,16 +15,7 @@ const outputDir = null;
 const eyelinkSubjects = getSubjectsEyelink({ eyelinkDir: inputDirs.eyelink });
 console.log(eyelinkSubjects);
 
-// // test reading xls
-// const xlsFile = `${inputDirs.eyelink}/est9m.xls`;
-// const xlsData = parseXLS(xlsFile);
-// const columns = xlsData[0].data[0];
-// const xlsDataNamed = xlsData[0].data.reduce((out, row, rowIndex) => {
-//     if(rowIndex === 0) return out;
-//     out.push(columns.reduce((newRow, columnId, columnIndex) => {
-//         newRow[columnId] = row[columnIndex];
-//         return newRow;
-//     }, ({})));
-//     return out;
-// }, []);
-// console.log(xlsDataNamed[0]);
+// test reading xls
+const xlsData = parseXLS({ path: eyelinkSubjects[0].fixPath });
+
+console.log(xlsData[0]);
