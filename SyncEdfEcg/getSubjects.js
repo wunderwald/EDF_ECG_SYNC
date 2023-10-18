@@ -6,17 +6,22 @@ const getDirList = ({ dir, fileExtension }) => fs.readdirSync(dir)
     .filter(file => file.endsWith(fileExtension))
     .map(file => ({ file, path: `${dir}/${file}` }));
 
-const analyzeEyelinkFiles = ({ fileList }) => fileList.map(({ file, path }) => {
-    const [ageGroup, subjectID, reportType] = file.replace('.xls', '').split('_');
-    return { subjectID, reportType, ageGroup, path, file };
-});
-
 const fixSubjectId = ({ subjectID }) => {
     if (subjectID.length === 3) return subjectID;
     if (subjectID.length === 2) return `0${subjectID}`;
     if (subjectID.length === 1) return `00${subjectID}`;
     warn(`invalid format of subject id: ${subjectID} (must be 3 or less characters long)`)
-}
+};
+
+const analyzeEyelinkFiles = ({ fileList }) => fileList.map(({ file, path }) => {
+    const [ageGroup, subjectID, reportType] = file.replace('.xls', '').split('_');
+    return { subjectID, reportType, ageGroup, path, file };
+});
+
+const analyzeLabchartFiles = ({ fileList }) => fileList.map(({ file, path }) => {
+    const [subjectID, experimentID] = file.replace('.txt', '').split('_');
+    return { subjectID, path, file };
+});
 
 export const getSubjectsEyelink = ({ eyelinkDir }) => {
     logNewline();
@@ -39,11 +44,29 @@ export const getSubjectsEyelink = ({ eyelinkDir }) => {
             warn(`no saccade report found for subject ${subjectID}.`);
             return null;
         }
-        success(`saccade and fixation reports found for subject ${subjectID}.`)
+        // return object { subjectID, fixPath, saccPath }
+        const fixedSubjectId = fixSubjectId({ subjectID });
+        success(`saccade and fixation reports found for subject ${fixedSubjectId}.`)
         return {
-            subjectID: fixSubjectId({ subjectID }),
+            subjectID: fixedSubjectId,
             fixPath: fixFile.path,
             saccPath: saccFile.path
         };
     }).filter(o => o);
+};
+
+export const getSubjectsLabchart = ({ labchartDir }) => {
+    logNewline();
+    log('reading labchart files (ecg data)')
+    // make objects { subjectID, path, file } for each txt file in the input dir
+    const txtFiles = analyzeLabchartFiles({ fileList: getDirList({ dir: labchartDir, fileExtension: '.txt' }) });
+    if (txtFiles.length === 0) error(`no .txt files found in labchart dir [${labchartDir}]`);
+    return txtFiles.map(({ subjectID, path }) => {
+        const fixedSubjectId = fixSubjectId({ subjectID });
+        success(`labchart file found for subject ${fixedSubjectId}.`);
+        return {
+            subjectID: fixedSubjectId,
+            path: path,
+        };
+    });
 };
