@@ -10,6 +10,7 @@
   "license": "ISC",
   "type": "module",
   "dependencies": {
+    "csv": "^6.3.5",
     "node-xlsx": "^0.23.0"
   }
 }
