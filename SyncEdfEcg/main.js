@@ -1,7 +1,7 @@
 import { log, warn, error, success, logNewline } from './log.js';
 import { getSubjectsEyelink, getSubjectsLabchart, getSubjectsMatlab, unifySubjectLists } from './getSubjects.js';
-import { parseLabchartTxt } from './parseLabchartData.js';
 import { parseXLS } from './parseXLS.js';
+import { parseLabchartTxt } from './parseLabchartData.js';
 
 
 // I/O dirs
@@ -26,14 +26,23 @@ subjects.forEach(subject => {
     // parse eyelink data
     log('parsing eyelink fixation report...');
     const fixationData = parseXLS({ path: subject.fixationReportPath });
-
     log('parsing eyelink saccade report...');
     const saccadeData = parseXLS({ path: subject.saccadeReportPath });
 
-    // parse labchart data
+    // parse labchart data: labchartData is an array of recordings, each recording is an array of samples
     log('parsing labchart data...');
     const labchartData = parseLabchartTxt({path: subject.labchartPath });
 
-    console.log(labchartData[0].data);
+    /*
+    TODO:
+    - add steps from IBXX_ADI for processing labchart:
+        - test number recordings (0:preset, 1: actual recording)
+        - select right recording, flatten, split (using matlab data)
+        - transfrom segments to trials (using matlab data)
+    - append eyelink data to labchart data:
+        - keep all existing channels
+        - add isFixated, isSaccade, isBlink as binary channels
+    - export
+    */
 
 });
