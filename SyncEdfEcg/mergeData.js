@@ -7,19 +7,19 @@ export const mergeTriggerTimes = ({ trialData, labchartData }) => {
             endTimeUTC: Date.parse(trial.endTime)
         }))
         .reduce((out, trial) => {
-            out.push({ 
-                absTime: trial.startTimeUTC, 
+            out.push({
+                absTime: trial.startTimeUTC,
                 relTime: (trial.startTimeUTC - Date.parse(trialData.find(t => t.trialIndex === '1').startTime)) / 1000.,
-                type: 'start', 
-                trialIndex: trial.trialIndex, 
-                triggerIndex: 2 * (trial.trialIndex - 1) 
+                type: 'start',
+                trialIndex: trial.trialIndex,
+                triggerIndex: 2 * (trial.trialIndex - 1)
             });
-            out.push({ 
-                absTime: trial.endTimeUTC, 
+            out.push({
+                absTime: trial.endTimeUTC,
                 relTime: (trial.endTimeUTC - Date.parse(trialData.find(t => t.trialIndex === '1').startTime)) / 1000.,
-                type: 'end', 
-                trialIndex: trial.trialIndex, 
-                triggerIndex: 2 * (trial.trialIndex - 1) + 1 
+                type: 'end',
+                trialIndex: trial.trialIndex,
+                triggerIndex: 2 * (trial.trialIndex - 1) + 1
             });
             return out;
         }, []);
@@ -47,4 +47,39 @@ export const mergeTriggerTimes = ({ trialData, labchartData }) => {
         }
     });
     return mergedTriggers;
-}
+};
+
+export const eyelinkEventsToLabchartTime = ({ triggers, fixations, saccades, blinks }) => {
+    const trialStartTriggersLabchart = triggers
+        .filter(trigger => trigger.triggerType === 'start')
+        .map(trigger => ({
+            trialIndex: trigger.trialIndex,
+            relTimeSecs: trigger.relTimeLabchartSecs,
+        }));
+    const fixationsRelativeToLabchart = fixations.map(fixation => {
+        const trialStartTigger = trialStartTriggersLabchart.find(trigger => trigger.trialIndex === fixation.trialIndex);
+        return {
+            relStartTimeSecs: +(trialStartTigger.relTimeSecs + (fixation.startTimeRelToTrialStartMillis / 1000.)).toFixed(4),
+            relEndTimeSecs: +(trialStartTigger.relTimeSecs + (fixation.endTimeRelToTrialStartMillis / 1000.)).toFixed(4),
+        };
+    });
+    const saccadesRelativeToLabchart = saccades.map(saccade => {
+        const trialStartTigger = trialStartTriggersLabchart.find(trigger => trigger.trialIndex === saccade.trialIndex);
+        return {
+            relStartTimeSecs: +(trialStartTigger.relTimeSecs + (saccade.startTimeRelToTrialStartMillis / 1000.)).toFixed(4),
+            relEndTimeSecs: +(trialStartTigger.relTimeSecs + (saccade.endTimeRelToTrialStartMillis / 1000.)).toFixed(4),
+        };
+    });
+    const blinksRelativeToLabchart = blinks.map(blink => {
+        const trialStartTigger = trialStartTriggersLabchart.find(trigger => trigger.trialIndex === blink.trialIndex);
+        return {
+            relStartTimeSecs: +(trialStartTigger.relTimeSecs + (blink.startTimeRelToTrialStartMillis / 1000.)).toFixed(4),
+            relEndTimeSecs: +(trialStartTigger.relTimeSecs + (blink.endTimeRelToTrialStartMillis / 1000.)).toFixed(4),
+        };
+    });
+    return {
+        fixations: fixationsRelativeToLabchart,
+        saccades: saccadesRelativeToLabchart,
+        blinks: blinksRelativeToLabchart
+    };
+};

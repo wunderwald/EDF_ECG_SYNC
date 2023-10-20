@@ -4,7 +4,7 @@ import { getSubjectsEyelink, getSubjectsLabchart, getSubjectsMatlab, unifySubjec
 import { parseXLS } from './parseXLS.js';
 import { parseLabchartTxt, processLabchartData } from './parseLabchartData.js';
 import { parseTrialData } from './parseMatlabData.js';
-import { mergeTriggerTimes } from './mergeData.js';
+import { mergeTriggerTimes, eyelinkEventsToLabchartTime } from './mergeData.js';
 
 // toggle logging
 SET_LOG(true);
@@ -52,7 +52,7 @@ subjects.forEach((subject, i) => {
     const labchartData = processLabchartData({ labchartDataRaw: labchartDataArr[0] });
 
     // combine trial start/end times from labchart and matlab
-    log(`processing triggers/markers in matlab and labchart data...`)
+    log(`merging triggers/markers from matlab and labchart data...`)
     const numTrialsMatlab = trialData.length;
     const numTriggersLabchart = labchartData.filter(sample => sample.trigger).length;
     if(numTriggersLabchart !== 2*numTrialsMatlab){
@@ -70,17 +70,17 @@ subjects.forEach((subject, i) => {
     // process fixation data
     log("processing fixation data...");
     const fixationData = fixationDataRaw.map(fixation => ({
-        trialIndex: fixation.TRIAL_INDEX,
-        startTimeRelToTrialStartMillis: fixation.CURRENT_FIX_START,
-        endTimeRelToTrialStartMillis: fixation.CURRENT_FIX_END
+        trialIndex: +fixation.TRIAL_INDEX,
+        startTimeRelToTrialStartMillis: +fixation.CURRENT_FIX_START,
+        endTimeRelToTrialStartMillis: +fixation.CURRENT_FIX_END
     }));
     
     //process saccade data
     log("processing saccade data...");
     const saccadeData = saccadeDataRaw.map(saccade => ({
-        trialIndex: saccade.TRIAL_INDEX,
-        startTimeRelToTrialStartMillis: saccade.CURRENT_SAC_START_TIME,
-        endTimeRelToTrialStartMillis: saccade.CURRENT_SAC_END_TIME
+        trialIndex: +saccade.TRIAL_INDEX,
+        startTimeRelToTrialStartMillis: +saccade.CURRENT_SAC_START_TIME,
+        endTimeRelToTrialStartMillis: +saccade.CURRENT_SAC_END_TIME
     }));
     
     //process blink data
@@ -89,10 +89,22 @@ subjects.forEach((subject, i) => {
         trialIndex: saccade.TRIAL_INDEX,
         startTimeRelToTrialStartMillis: saccade.CURRENT_SAC_BLINK_START,
         endTimeRelToTrialStartMillis: saccade.CURRENT_SAC_BLINK_END
-    })).filter(blink => blink.startTimeRelToTrialStartMillis !== '.' && blink.endTimeRelToTrialStartMillis !== '.');
+    })).filter(blink => {
+        return blink.startTimeRelToTrialStartMillis !== '.' && blink.endTimeRelToTrialStartMillis !== '.'
+    }).map(blink => ({
+        trialIndex: +blink.trialIndex,
+        startTimeRelToTrialStartMillis: +blink.startTimeRelToTrialStartMillis,
+        endTimeRelToTrialStartMillis: +blink.endTimeRelToTrialStartMillis
+    }));
 
     // append isFixated, isSaccade, isBlink to labchart data as binary channels
-    // TODO: add relative eyelink times to LABCHART MARKER TIMES
+    const eyelinkEventsInLabchartTime = eyelinkEventsToLabchartTime({
+        triggers: triggerTimes,
+        fixations: fixationData,
+        saccades: saccadeData,
+        blinks: blinkData
+    });
+    console.log(eyelinkEventsInLabchartTime);
 
     // export extended labchart data
     // TODO: export in format for ibxx viewer
