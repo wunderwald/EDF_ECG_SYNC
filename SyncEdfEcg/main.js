@@ -4,7 +4,7 @@ import { getSubjectsEyelink, getSubjectsLabchart, getSubjectsMatlab, unifySubjec
 import { parseXLS } from './parseXLS.js';
 import { parseLabchartTxt, processLabchartData } from './parseLabchartData.js';
 import { parseTrialData } from './parseMatlabData.js';
-import { mergeTriggerTimes, eyelinkEventsToLabchartTime, addEyelinkEventsToLabchartData } from './mergeData.js';
+import { mergeTriggerTimes, eyelinkEventsToLabchartTime, addEyelinkEventsToLabchartData, splitLabchartDataByTrials } from './mergeData.js';
 
 // toggle logging
 SET_LOG(true);
@@ -59,12 +59,12 @@ subjects.forEach((subject, i) => {
         error(`number of trials (${numTrialsMatlab}) doesn't match number of triggers in labchart data (${numTriggersLabchart}) [there must be two triggers for each trial]`);
         return;
     }
-    const triggerTimes = mergeTriggerTimes({ trialData, labchartData });
+    const triggers = mergeTriggerTimes({ trialData, labchartData });
 
     // calculate matlab / labchart offset of relative times
     // these are due to the recording start time in labchart only, no reason to worry
     // An offset of 60 on the first trigger means that the labchart recording has been started 60s before the first trial in matlab started.
-    const relTimeOffsetsSecs = triggerTimes.map(o => o.relTimeLabchartSecs - o.relTimeMatlabSecs);
+    const relTimeOffsetsSecs = triggers.map(o => o.relTimeLabchartSecs - o.relTimeMatlabSecs);
     info(`mean offset/delay between relative trigger times between matlab and labchart: ${mean(relTimeOffsetsSecs).toFixed(2)}`);
 
     // process fixation data
@@ -100,7 +100,7 @@ subjects.forEach((subject, i) => {
     // mapping fixations, saccades and blinks to labchart time
     log("mapping fixations, saccades and blinks to labchart time...");
     const eyelinkEventsInLabchartTime = eyelinkEventsToLabchartTime({
-        triggers: triggerTimes,
+        triggers: triggers,
         fixations: fixationData,
         saccades: saccadeData,
         blinks: blinkData
@@ -108,13 +108,15 @@ subjects.forEach((subject, i) => {
 
     // append fixation, saccade, blink to labchart data as binary channels
     log("appending fixations, saccades, blinks to labchart data...");
-    const labchartDataWithEyelinkEvents = addEyelinkEventsToLabchartData({
+    const extendedLabchartData = addEyelinkEventsToLabchartData({
         labchartData: labchartData,
         eyelinkEvents: eyelinkEventsInLabchartTime
     });
 
-    // split labchart data by triggers using triggerTimes
-    //TODO
+    // split labchart data by triggers
+    log("splitting extended labchart data into trials...");
+    const extendedLabchartDataByTrial = splitLabchartDataByTrials({ labchartData: extendedLabchartData, triggers: triggers });
+    console.log(extendedLabchartDataByTrial);
 
     // export extended labchart data
     // TODO: export in format for ibxx viewer

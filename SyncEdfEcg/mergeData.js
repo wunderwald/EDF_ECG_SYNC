@@ -90,3 +90,19 @@ export const addEyelinkEventsToLabchartData = ({ labchartData, eyelinkEvents }) 
     saccade: +!!eyelinkEvents.saccades.find(saccade => saccade.relStartTimeSecs <= sample.relTime && saccade.relEndTimeSecs >= sample.relTime),
     blink: +!!eyelinkEvents.blinks.find(blink => blink.relStartTimeSecs <= sample.relTime && blink.relEndTimeSecs >= sample.relTime)
 }));
+
+export const splitLabchartDataByTrials = ({ labchartData, triggers }) => {
+    const trialIndices = [...(new Set(triggers.map(trigger => trigger.trialIndex)))];
+    const trialTimes = trialIndices.map(trialIndex => ({
+        trialIndex: trialIndex,
+        relStartTimeSecs: triggers.find(trigger => trigger.trialIndex === trialIndex && trigger.triggerType === 'start').relTimeLabchartSecs,
+        relEndTimeSecs: triggers.find(trigger => trigger.trialIndex === trialIndex && trigger.triggerType === 'end').relTimeLabchartSecs
+    }));
+    const trials = trialIndices.map(trialIndex => ({ trialIndex, data: [] }));
+    labchartData.forEach(sample => {
+        const trialIndex = trialTimes.find(t => t.relStartTimeSecs <= sample.relTime && t.relEndTimeSecs >= sample.relTime)?.trialIndex;
+        if(!trialIndex) return;
+        trials.find(trial => trial.trialIndex === trialIndex).data.push(sample);
+    });
+    return trials;
+};
