@@ -64,15 +64,13 @@ subjects.forEach((subject, i) => {
     const relTimeOffsetsSecs = triggerTimes.map(o => o.relTimeLabchartSecs - o.relTimeMatlabSecs);
     info(`offset/delay between relative trigger times between matlab and labchart (seconds)\n\tmean: ${mean(relTimeOffsetsSecs).toFixed(2)}\n\tmin: ${min(relTimeOffsetsSecs).toFixed(2)}\n\tmax: ${max(relTimeOffsetsSecs).toFixed(2)}\n\t! these are due to the recording start time in labchart only, no reason to worry.\n\t! An offset of 60 on the first trigger means that the labchart recording has been started 60s before the first trial in matlab started.`);
 
-    /*
-    TODO:
-    - add steps from IBXX_ADI for processing labchart:
-        - select right recording, flatten, split (using matlab data)
-        - transfrom segments to trials (using matlab data)
-    - append eyelink data to labchart data:
-        - keep all existing channels
-        - add isFixated, isSaccade, isBlink as binary channels
-    - export
-    */
+    // extract blink, saccade, fixation timing from eyelink data
+    // TODO
+
+    // append isFixated, isSaccade, isBlink to labchart data as binary channels
+    // TODO
+
+    // export expanded labcgart data
+    // TODO
 
 });
