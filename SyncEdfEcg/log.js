@@ -1,9 +1,12 @@
+import * as fs from 'fs';
+
 let LOG = true;
 let logText = '';
 
 export const SET_LOG = doLog => LOG = doLog;
 
 export const getLogTxt = () => logText;
+export const logToFile = ({ logDir }) => fs.writeFileSync(`${logDir}/log_${new Date().getTime()}.txt`, logText);
 
 export const log = msg => {
     LOG && console.log(`👀 ${msg}`);

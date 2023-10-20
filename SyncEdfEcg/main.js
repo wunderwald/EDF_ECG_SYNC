@@ -1,4 +1,4 @@
-import { log, warn, error, success, info, logNewline, SET_LOG } from './log.js';
+import { log, warn, error, success, info, logNewline, SET_LOG, logToFile } from './log.js';
 import { min, max, mean } from './stat.js';
 import { getSubjectsEyelink, getSubjectsLabchart, getSubjectsMatlab, unifySubjectLists } from './getSubjects.js';
 import { parseXLS } from './parseXLS.js';
@@ -17,6 +17,7 @@ const inputDirs = {
     labchart: `${inputBaseDir}/labchart`
 };
 const outputDir = null;
+const logDir = './logs';
 
 // get subject list: each subject must have a fixation and saccade report, a labchart ecg file and a matlab data dir
 const eyelinkSubjects = getSubjectsEyelink({ eyelinkDir: inputDirs.eyelink });
@@ -26,7 +27,7 @@ const subjects = unifySubjectLists({ eyelinkSubjects, labchartSubjects, matlabSu
 
 subjects.forEach((subject, i) => {
 
-    if(i > 0) return;
+    //if(i > 0) return;
 
     logNewline();
     log(`processing subject ${subject.subjectID}`);
@@ -74,3 +75,6 @@ subjects.forEach((subject, i) => {
     // TODO
 
 });
+
+// write log to file
+logToFile({ logDir: logDir });
