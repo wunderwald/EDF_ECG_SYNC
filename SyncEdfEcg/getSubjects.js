@@ -102,7 +102,7 @@ export const getSubjectsMatlab = ({ matlabDir }) => {
 
 export const unifySubjectLists = ({ eyelinkSubjects, labchartSubjects, matlabSubjects }) => {
     logNewline();
-    log('combining eyelink, labchart and matlab subject lists');
+    log('combining eyelink, labchart and matlab files');
     const subjectIDs = [...(new Set([
         ...eyelinkSubjects.map(o => o.subjectID),
         ...labchartSubjects.map(o => o.subjectID),
