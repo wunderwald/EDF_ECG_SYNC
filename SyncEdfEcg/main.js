@@ -62,8 +62,10 @@ subjects.forEach((subject, i) => {
     const triggerTimes = mergeTriggerTimes({ trialData, labchartData });
 
     // calculate matlab / labchart offset of relative times
+    // these are due to the recording start time in labchart only, no reason to worry
+    // An offset of 60 on the first trigger means that the labchart recording has been started 60s before the first trial in matlab started.
     const relTimeOffsetsSecs = triggerTimes.map(o => o.relTimeLabchartSecs - o.relTimeMatlabSecs);
-    info(`offset/delay between relative trigger times between matlab and labchart (seconds)\n\tmean: ${mean(relTimeOffsetsSecs).toFixed(2)}\n\tmin: ${min(relTimeOffsetsSecs).toFixed(2)}\n\tmax: ${max(relTimeOffsetsSecs).toFixed(2)}\n\t! these are due to the recording start time in labchart only, no reason to worry.\n\t! An offset of 60 on the first trigger means that the labchart recording has been started 60s before the first trial in matlab started.`);
+    info(`mean offset/delay between relative trigger times between matlab and labchart (seconds): ${mean(relTimeOffsetsSecs).toFixed(2)}`);
 
     // extract blink, saccade, fixation timing from eyelink data
     // TODO
