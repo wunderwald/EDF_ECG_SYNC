@@ -123,6 +123,7 @@ subjects.forEach((subject, i) => {
 });
 
 // write log to file
+logNewline();
 log("exporting log...");
 logToFile({ logDir: logDir });
 
