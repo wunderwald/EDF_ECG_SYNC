@@ -1,5 +1,6 @@
 import * as fs from 'fs';
 import { parse } from 'csv-parse/sync';
+import { parseCSV } from './parseCSV.js';
 
 const adiDateToUTC = ({ date, time }) => {
     const [month, day, year] = date.split('/');
@@ -85,8 +86,8 @@ export const parseLabchartTxt = ({ path }) => {
         const csv = tsv.replace(/\t/g, ',');
 
         //parse csv
-        const records = parse(csv, { columns: true, skip_empty_lines: true, });
-
+        const records = parseCSV({ csvData: csv });
+        
         //convert data to numeric
         const data = records.map(r => {
             channelTitles.forEach(ch => r[ch] = +r[ch]);
