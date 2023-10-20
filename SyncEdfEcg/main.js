@@ -7,7 +7,7 @@ import { mergeTriggerTimes, eyelinkEventsToLabchartTime, addEyelinkEventsToLabch
 import { trialToCSV } from './write.js';
 import * as fs from 'fs';
 
-// toggle logging
+// toggle console logging
 SET_LOG(true);
 
 // I/O dirs
