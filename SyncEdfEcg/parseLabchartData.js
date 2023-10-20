@@ -114,5 +114,3 @@ export const processLabchartData = ({ labchartDataRaw }) => labchartDataRaw.data
     fro: voltsToBinary({ volts: o.fro }),
     trigger: voltsToBinary({ volts: o.matlab })
 }));
-
-
