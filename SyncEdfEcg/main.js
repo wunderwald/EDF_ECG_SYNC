@@ -1,5 +1,4 @@
 import { log, warn, error, success, info, logNewline, SET_LOG, logToFile } from './log.js';
-import { min, max, mean } from './stat.js';
 import { getSubjectsEyelink, getSubjectsLabchart, getSubjectsMatlab, unifySubjectLists } from './getSubjects.js';
 import { parseXLS } from './parseXLS.js';
 import { parseLabchartTxt, processLabchartData } from './parseLabchartData.js';
