@@ -2,6 +2,7 @@ import { log, warn, error, success, logNewline } from './log.js';
 import { getSubjectsEyelink, getSubjectsLabchart, getSubjectsMatlab, unifySubjectLists } from './getSubjects.js';
 import { parseXLS } from './parseXLS.js';
 import { parseLabchartTxt } from './parseLabchartData.js';
+import { parseTrialData } from './parseMatlabData.js';
 
 
 // I/O dirs
@@ -19,25 +20,27 @@ const labchartSubjects = getSubjectsLabchart({ labchartDir: inputDirs.labchart }
 const matlabSubjects = getSubjectsMatlab({ matlabDir: inputDirs.matlab });  // todo: test matlab dir content
 const subjects = unifySubjectLists({ eyelinkSubjects, labchartSubjects, matlabSubjects });
 
-subjects.forEach(subject => {
+subjects.forEach((subject, i) => {
+    
+    if(i > 0) return;
+
     logNewline();
     log(`processing subject ${subject.subjectID}`);
     
+    // parse matlab data
+    log('parsing matlab trial data...');
+    const trialData = parseTrialData({ matlabDirPath: subject.matlabSubdir });
+
     // parse eyelink data
     log('parsing eyelink fixation report...');
     const fixationData = parseXLS({ path: subject.fixationReportPath });
     log('parsing eyelink saccade report...');
     const saccadeData = parseXLS({ path: subject.saccadeReportPath });
 
-    // parse labchart data: labchartData is an array of recordings, each recording is an array of samples
+    // parse labchart data: labchartData is an array of recordings, each recording is an array of samples & a start time in UTF
     log('parsing labchart data...');
     const labchartData = parseLabchartTxt({path: subject.labchartPath });
 
-    // parse matlab data
-    log('parsing matlab trial data...');
-    const trialData = null;
-    log('parsing matlab frame data...');
-    const frameData = null;
 
     /*
     TODO:
