@@ -71,7 +71,7 @@ subjects.forEach((subject, i) => {
     // append isFixated, isSaccade, isBlink to labchart data as binary channels
     // TODO
 
-    // export expanded labcgart data
+    // export extended labchart data
     // TODO
 
 });
