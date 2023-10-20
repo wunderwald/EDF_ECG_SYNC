@@ -1,4 +1,6 @@
-const LOG = true;
+let LOG = true;
+
+export const SET_LOG = doLog => LOG = doLog;
 
 export const log = msg => LOG && console.log(`👀 ${msg}`);
 export const success = msg => LOG && console.log(`🥰 ${msg}`);

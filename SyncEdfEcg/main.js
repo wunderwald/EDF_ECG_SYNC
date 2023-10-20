@@ -1,9 +1,11 @@
-import { log, warn, error, success, logNewline } from './log.js';
+import { log, warn, error, success, logNewline, SET_LOG } from './log.js';
 import { getSubjectsEyelink, getSubjectsLabchart, getSubjectsMatlab, unifySubjectLists } from './getSubjects.js';
 import { parseXLS } from './parseXLS.js';
 import { parseLabchartTxt } from './parseLabchartData.js';
 import { parseTrialData } from './parseMatlabData.js';
 
+// toggle logging
+SET_LOG(true);
 
 // I/O dirs
 const inputBaseDir = './inputData';
