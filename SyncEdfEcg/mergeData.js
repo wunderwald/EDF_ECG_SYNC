@@ -83,3 +83,10 @@ export const eyelinkEventsToLabchartTime = ({ triggers, fixations, saccades, bli
         blinks: blinksRelativeToLabchart
     };
 };
+
+export const addEyelinkEventsToLabchartData = ({ labchartData, eyelinkEvents }) => labchartData.map(sample => ({
+    ...sample,
+    fixation: +!!eyelinkEvents.fixations.find(fixation => fixation.relStartTimeSecs <= sample.relTime && fixation.relEndTimeSecs >= sample.relTime),
+    saccade: +!!eyelinkEvents.saccades.find(saccade => saccade.relStartTimeSecs <= sample.relTime && saccade.relEndTimeSecs >= sample.relTime),
+    blink: +!!eyelinkEvents.blinks.find(blink => blink.relStartTimeSecs <= sample.relTime && blink.relEndTimeSecs >= sample.relTime)
+}));

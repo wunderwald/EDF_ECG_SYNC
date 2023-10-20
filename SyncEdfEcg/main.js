@@ -4,7 +4,7 @@ import { getSubjectsEyelink, getSubjectsLabchart, getSubjectsMatlab, unifySubjec
 import { parseXLS } from './parseXLS.js';
 import { parseLabchartTxt, processLabchartData } from './parseLabchartData.js';
 import { parseTrialData } from './parseMatlabData.js';
-import { mergeTriggerTimes, eyelinkEventsToLabchartTime } from './mergeData.js';
+import { mergeTriggerTimes, eyelinkEventsToLabchartTime, addEyelinkEventsToLabchartData } from './mergeData.js';
 
 // toggle logging
 SET_LOG(true);
@@ -97,14 +97,24 @@ subjects.forEach((subject, i) => {
         endTimeRelToTrialStartMillis: +blink.endTimeRelToTrialStartMillis
     }));
 
-    // append isFixated, isSaccade, isBlink to labchart data as binary channels
+    // mapping fixations, saccades and blinks to labchart time
+    log("mapping fixations, saccades and blinks to labchart time...");
     const eyelinkEventsInLabchartTime = eyelinkEventsToLabchartTime({
         triggers: triggerTimes,
         fixations: fixationData,
         saccades: saccadeData,
         blinks: blinkData
     });
-    console.log(eyelinkEventsInLabchartTime);
+
+    // append fixation, saccade, blink to labchart data as binary channels
+    log("appending fixations, saccades, blinks to labchart data...");
+    const labchartDataWithEyelinkEvents = addEyelinkEventsToLabchartData({
+        labchartData: labchartData,
+        eyelinkEvents: eyelinkEventsInLabchartTime
+    });
+
+    // split labchart data by triggers using triggerTimes
+    //TODO
 
     // export extended labchart data
     // TODO: export in format for ibxx viewer
