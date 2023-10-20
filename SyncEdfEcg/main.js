@@ -5,6 +5,8 @@ import { parseXLS } from './parseXLS.js';
 import { parseLabchartTxt, processLabchartData } from './parseLabchartData.js';
 import { parseTrialData } from './parseMatlabData.js';
 import { mergeTriggerTimes, eyelinkEventsToLabchartTime, addEyelinkEventsToLabchartData, splitLabchartDataByTrials } from './mergeData.js';
+import { trialToCSV } from './write.js';
+import * as fs from 'fs';
 
 // toggle logging
 SET_LOG(true);
@@ -16,8 +18,13 @@ const inputDirs = {
     eyelink: `${inputBaseDir}/eyelink`,
     labchart: `${inputBaseDir}/labchart`
 };
-const outputDir = null;
+const outputDir = './outputData';
 const logDir = './logs';
+
+// create or overwrite output dirs
+if (fs.existsSync(outputDir)) fs.rmSync(outputDir, { recursive: true, force: true });
+fs.mkdirSync(outputDir);
+if (!fs.existsSync(logDir)) fs.mkdirSync(logDir);
 
 // get subject list: each subject must have a fixation and saccade report, a labchart ecg file and a matlab data dir
 const eyelinkSubjects = getSubjectsEyelink({ eyelinkDir: inputDirs.eyelink });
@@ -26,8 +33,6 @@ const matlabSubjects = getSubjectsMatlab({ matlabDir: inputDirs.matlab });  // t
 const subjects = unifySubjectLists({ eyelinkSubjects, labchartSubjects, matlabSubjects });
 
 subjects.forEach((subject, i) => {
-
-    if(i > 0) return;
 
     logNewline();
     log(`processing subject ${subject.subjectID}`);
@@ -55,17 +60,11 @@ subjects.forEach((subject, i) => {
     log(`merging triggers/markers from matlab and labchart data...`)
     const numTrialsMatlab = trialData.length;
     const numTriggersLabchart = labchartData.filter(sample => sample.trigger).length;
-    if(numTriggersLabchart !== 2*numTrialsMatlab){
+    if (numTriggersLabchart !== 2 * numTrialsMatlab) {
         error(`number of trials (${numTrialsMatlab}) doesn't match number of triggers in labchart data (${numTriggersLabchart}) [there must be two triggers for each trial]`);
         return;
     }
     const triggers = mergeTriggerTimes({ trialData, labchartData });
-
-    // calculate matlab / labchart offset of relative times
-    // these are due to the recording start time in labchart only, no reason to worry
-    // An offset of 60 on the first trigger means that the labchart recording has been started 60s before the first trial in matlab started.
-    const relTimeOffsetsSecs = triggers.map(o => o.relTimeLabchartSecs - o.relTimeMatlabSecs);
-    info(`mean offset/delay between relative trigger times between matlab and labchart: ${mean(relTimeOffsetsSecs).toFixed(2)}`);
 
     // process fixation data
     log("processing fixation data...");
@@ -74,7 +73,7 @@ subjects.forEach((subject, i) => {
         startTimeRelToTrialStartMillis: +fixation.CURRENT_FIX_START,
         endTimeRelToTrialStartMillis: +fixation.CURRENT_FIX_END
     }));
-    
+
     //process saccade data
     log("processing saccade data...");
     const saccadeData = saccadeDataRaw.map(saccade => ({
@@ -82,7 +81,7 @@ subjects.forEach((subject, i) => {
         startTimeRelToTrialStartMillis: +saccade.CURRENT_SAC_START_TIME,
         endTimeRelToTrialStartMillis: +saccade.CURRENT_SAC_END_TIME
     }));
-    
+
     //process blink data
     log("processing blink data...");
     const blinkData = saccadeDataRaw.map(saccade => ({
@@ -116,12 +115,21 @@ subjects.forEach((subject, i) => {
     // split labchart data by triggers
     log("splitting extended labchart data into trials...");
     const extendedLabchartDataByTrial = splitLabchartDataByTrials({ labchartData: extendedLabchartData, triggers: triggers });
-    console.log(extendedLabchartDataByTrial);
 
     // export extended labchart data
-    // TODO: export in format for ibxx viewer
-
+    log("exporting data...");
+    const outputSubdir = `${outputDir}/${subject.subjectID}`;
+    fs.mkdirSync(outputSubdir);
+    extendedLabchartDataByTrial.forEach(trial => trialToCSV({ trial: trial, outputDir: outputSubdir }));
 });
 
 // write log to file
-//logToFile({ logDir: logDir });
+log("exporting log...");
+logToFile({ logDir: logDir });
+
+// be happy
+logNewline();
+success('done!');
+
+// TODO: export in format for ibxx viewer
+// TODO: also use blinks from fixation file?
