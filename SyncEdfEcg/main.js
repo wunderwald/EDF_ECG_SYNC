@@ -1,8 +1,10 @@
-import { log, warn, error, success, logNewline, SET_LOG } from './log.js';
+import { log, warn, error, success, info, logNewline, SET_LOG } from './log.js';
+import { min, max, mean } from './stat.js';
 import { getSubjectsEyelink, getSubjectsLabchart, getSubjectsMatlab, unifySubjectLists } from './getSubjects.js';
 import { parseXLS } from './parseXLS.js';
 import { parseLabchartTxt, processLabchartData } from './parseLabchartData.js';
 import { parseTrialData } from './parseMatlabData.js';
+import { mergeTriggerTimes } from './mergeData.js';
 
 // toggle logging
 SET_LOG(true);
@@ -47,7 +49,20 @@ subjects.forEach((subject, i) => {
         return;
     }
     const labchartData = processLabchartData({ labchartDataRaw: labchartDataArr[0] });
-    console.log(labchartData);
+
+    // combine trial start/end times from labchart and matlab
+    log(`processing triggers/markers in matlab and labchart data...`)
+    const numTrialsMatlab = trialData.length;
+    const numTriggersLabchart = labchartData.filter(sample => sample.trigger).length;
+    if(numTriggersLabchart !== 2*numTrialsMatlab){
+        error(`number of trials (${numTrialsMatlab}) doesn't match number of triggers in labchart data (${numTriggersLabchart}) [there must be two triggers for each trial]`);
+        return;
+    }
+    const triggerTimes = mergeTriggerTimes({ trialData, labchartData });
+
+    // calculate matlab / labchart offset of relative times
+    const relTimeOffsetsSecs = triggerTimes.map(o => o.relTimeLabchartSecs - o.relTimeMatlabSecs);
+    info(`offset/delay between relative trigger times between matlab and labchart (seconds)\n\tmean: ${mean(relTimeOffsetsSecs).toFixed(2)}\n\tmin: ${min(relTimeOffsetsSecs).toFixed(2)}\n\tmax: ${max(relTimeOffsetsSecs).toFixed(2)}\n\t! these are due to the recording start time in labchart only, no reason to worry.\n\t! An offset of 60 on the first trigger means that the labchart recording has been started 60s before the first trial in matlab started.`);
 
     /*
     TODO:
