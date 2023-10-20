@@ -27,7 +27,7 @@ const subjects = unifySubjectLists({ eyelinkSubjects, labchartSubjects, matlabSu
 
 subjects.forEach((subject, i) => {
 
-    //if(i > 0) return;
+    if(i > 0) return;
 
     logNewline();
     log(`processing subject ${subject.subjectID}`);
@@ -38,9 +38,9 @@ subjects.forEach((subject, i) => {
 
     // parse eyelink data
     log('parsing eyelink fixation report...');
-    const fixationData = parseXLS({ path: subject.fixationReportPath });
+    const fixationDataRaw = parseXLS({ path: subject.fixationReportPath });
     log('parsing eyelink saccade report...');
-    const saccadeData = parseXLS({ path: subject.saccadeReportPath });
+    const saccadeDataRaw = parseXLS({ path: subject.saccadeReportPath });
 
     // parse labchart data: labchartData is an array of recordings, each recording is an array of samples & a start time in UTF
     log('parsing labchart data...');
@@ -67,11 +67,28 @@ subjects.forEach((subject, i) => {
     const relTimeOffsetsSecs = triggerTimes.map(o => o.relTimeLabchartSecs - o.relTimeMatlabSecs);
     info(`mean offset/delay between relative trigger times between matlab and labchart: ${mean(relTimeOffsetsSecs).toFixed(2)}`);
 
-    // extract blink, saccade, fixation timing from eyelink data
-    // TODO
+    // process fixation data
+    log("processing fixation data...");
+    const fixationData = fixationDataRaw.map(fixation => ({
+        trialIndex: fixation.TRIAL_INDEX,
+        startTimeRelToTrialStartMillis: fixation.CURRENT_FIX_START,
+        endTimeRelToTrialStartMillis: fixation.CURRENT_FIX_END,
+    }));
+    
+    //process saccade data
+    log("processing saccade data...");
+    const saccadeData = saccadeDataRaw.map(saccade => ({
+        trialIndex: saccade.TRIAL_INDEX,
+        startTimeRelToTrialStartMillis: saccade.CURRENT_SAC_START_TIME,
+        endTimeRelToTrialStartMillis: saccade.CURRENT_SAC_END_TIME,
+    }));
+    
+    //process blink data
+    log("processing blink data...");
+    //TODO
 
     // append isFixated, isSaccade, isBlink to labchart data as binary channels
-    // TODO
+    // TODO: add relative eyelink times to LABCHART MARKER TIMES
 
     // export extended labchart data
     // TODO
@@ -79,4 +96,4 @@ subjects.forEach((subject, i) => {
 });
 
 // write log to file
-logToFile({ logDir: logDir });
+//logToFile({ logDir: logDir });
