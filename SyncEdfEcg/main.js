@@ -33,6 +33,12 @@ subjects.forEach(subject => {
     log('parsing labchart data...');
     const labchartData = parseLabchartTxt({path: subject.labchartPath });
 
+    // parse matlab data
+    log('parsing matlab trial data...');
+    const trialData = null;
+    log('parsing matlab frame data...');
+    const frameData = null;
+
     /*
     TODO:
     - add steps from IBXX_ADI for processing labchart:
