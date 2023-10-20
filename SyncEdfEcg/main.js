@@ -1,7 +1,7 @@
 import { log, warn, error, success, logNewline, SET_LOG } from './log.js';
 import { getSubjectsEyelink, getSubjectsLabchart, getSubjectsMatlab, unifySubjectLists } from './getSubjects.js';
 import { parseXLS } from './parseXLS.js';
-import { parseLabchartTxt } from './parseLabchartData.js';
+import { parseLabchartTxt, processLabchartData } from './parseLabchartData.js';
 import { parseTrialData } from './parseMatlabData.js';
 
 // toggle logging
@@ -23,12 +23,12 @@ const matlabSubjects = getSubjectsMatlab({ matlabDir: inputDirs.matlab });  // t
 const subjects = unifySubjectLists({ eyelinkSubjects, labchartSubjects, matlabSubjects });
 
 subjects.forEach((subject, i) => {
-    
+
     if(i > 0) return;
 
     logNewline();
     log(`processing subject ${subject.subjectID}`);
-    
+
     // parse matlab data
     log('parsing matlab trial data...');
     const trialData = parseTrialData({ matlabDirPath: subject.matlabSubdir });
@@ -41,13 +41,17 @@ subjects.forEach((subject, i) => {
 
     // parse labchart data: labchartData is an array of recordings, each recording is an array of samples & a start time in UTF
     log('parsing labchart data...');
-    const labchartData = parseLabchartTxt({path: subject.labchartPath });
-
+    const labchartDataArr = parseLabchartTxt({ path: subject.labchartPath });
+    if (labchartDataArr.length !== 1) {
+        error(`invalid number of recordings in labchart data: found ${labchartDataArr.length}, expected 1`);
+        return;
+    }
+    const labchartData = processLabchartData({ labchartDataRaw: labchartDataArr[0] });
+    console.log(labchartData);
 
     /*
     TODO:
     - add steps from IBXX_ADI for processing labchart:
-        - test number recordings (0:preset, 1: actual recording)
         - select right recording, flatten, split (using matlab data)
         - transfrom segments to trials (using matlab data)
     - append eyelink data to labchart data:

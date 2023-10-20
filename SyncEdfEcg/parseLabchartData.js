@@ -87,7 +87,7 @@ export const parseLabchartTxt = ({ path }) => {
 
         //parse csv
         const records = parseCSV({ csvData: csv });
-        
+
         //convert data to numeric
         const data = records.map(r => {
             channelTitles.forEach(ch => r[ch] = +r[ch]);
@@ -99,3 +99,20 @@ export const parseLabchartTxt = ({ path }) => {
 
     return dataPerRecording;
 };
+
+const voltsToBinary = ({ volts }) => volts > 4.2 ? 1 : 0;
+const addSecsToNumericUTCTimestamp = ({ utcTimestampNumeric, seconds }) => utcTimestampNumeric + 1000 * seconds;
+
+export const processLabchartData = ({ labchartDataRaw }) => labchartDataRaw.data.map(o => ({
+    relTime: o.time,
+    absTime: addSecsToNumericUTCTimestamp({
+        utcTimestampNumeric: labchartDataRaw.startTimeUTC,
+        seconds: o.time
+    }),
+    ecg: o.ecg,
+    resp: o.resp,
+    fro: voltsToBinary({ volts: o.fro }),
+    trigger: voltsToBinary({ volts: o.matlab })
+}));
+
+
