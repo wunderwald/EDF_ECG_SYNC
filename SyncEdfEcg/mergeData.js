@@ -61,6 +61,7 @@ export const eyelinkEventsToLabchartTime = ({ triggers, fixations, saccades, bli
         return {
             relStartTimeSecs: +(trialStartTigger.relTimeSecs + (fixation.startTimeRelToTrialStartMillis / 1000.)).toFixed(4),
             relEndTimeSecs: +(trialStartTigger.relTimeSecs + (fixation.endTimeRelToTrialStartMillis / 1000.)).toFixed(4),
+            fixDuration: +fixation.duration
         };
     });
     const saccadesRelativeToLabchart = saccades.map(saccade => {
@@ -68,6 +69,7 @@ export const eyelinkEventsToLabchartTime = ({ triggers, fixations, saccades, bli
         return {
             relStartTimeSecs: +(trialStartTigger.relTimeSecs + (saccade.startTimeRelToTrialStartMillis / 1000.)).toFixed(4),
             relEndTimeSecs: +(trialStartTigger.relTimeSecs + (saccade.endTimeRelToTrialStartMillis / 1000.)).toFixed(4),
+            sacAvgVelocity: +saccade.avgVelocity
         };
     });
     const blinksRelativeToLabchart = blinks.map(blink => {
@@ -87,7 +89,9 @@ export const eyelinkEventsToLabchartTime = ({ triggers, fixations, saccades, bli
 export const addEyelinkEventsToLabchartData = ({ labchartData, eyelinkEvents }) => labchartData.map(sample => ({
     ...sample,
     fixation: +!!eyelinkEvents.fixations.find(fixation => fixation.relStartTimeSecs <= sample.relTime && fixation.relEndTimeSecs >= sample.relTime),
+    fixationDuration: eyelinkEvents.fixations.find(fixation => fixation.relStartTimeSecs <= sample.relTime && fixation.relEndTimeSecs >= sample.relTime)?.fixDuration || -1,
     saccade: +!!eyelinkEvents.saccades.find(saccade => saccade.relStartTimeSecs <= sample.relTime && saccade.relEndTimeSecs >= sample.relTime),
+    saccadeAvgVelocity: eyelinkEvents.saccades.find(saccade => saccade.relStartTimeSecs <= sample.relTime && saccade.relEndTimeSecs >= sample.relTime)?.sacAvgVelocity || -1,
     blink: +!!eyelinkEvents.blinks.find(blink => blink.relStartTimeSecs <= sample.relTime && blink.relEndTimeSecs >= sample.relTime)
 }));
 

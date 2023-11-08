@@ -33,6 +33,8 @@ const subjects = unifySubjectLists({ eyelinkSubjects, labchartSubjects, matlabSu
 
 subjects.forEach((subject, i) => {
 
+    if(i>0)return;
+
     logNewline();
     log(`processing subject ${subject.subjectID}`);
 
@@ -70,7 +72,8 @@ subjects.forEach((subject, i) => {
     const fixationData = fixationDataRaw.map(fixation => ({
         trialIndex: +fixation.TRIAL_INDEX,
         startTimeRelToTrialStartMillis: +fixation.CURRENT_FIX_START,
-        endTimeRelToTrialStartMillis: +fixation.CURRENT_FIX_END
+        endTimeRelToTrialStartMillis: +fixation.CURRENT_FIX_END,
+        duration: +fixation.CURRENT_FIX_DURATION
     }));
 
     //process saccade data
@@ -78,7 +81,8 @@ subjects.forEach((subject, i) => {
     const saccadeData = saccadeDataRaw.map(saccade => ({
         trialIndex: +saccade.TRIAL_INDEX,
         startTimeRelToTrialStartMillis: +saccade.CURRENT_SAC_START_TIME,
-        endTimeRelToTrialStartMillis: +saccade.CURRENT_SAC_END_TIME
+        endTimeRelToTrialStartMillis: +saccade.CURRENT_SAC_END_TIME,
+        avgVelocity: +saccade.CURRENT_SAC_AVG_VELOCITY
     }));
 
     //process blink data
