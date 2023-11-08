@@ -33,8 +33,6 @@ const subjects = unifySubjectLists({ eyelinkSubjects, labchartSubjects, matlabSu
 
 subjects.forEach((subject, i) => {
 
-    if(i>0)return;
-
     logNewline();
     log(`processing subject ${subject.subjectID}`);
 
